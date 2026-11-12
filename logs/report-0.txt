@@ -1,0 +1,263 @@
+==================================================================
+BUG: KASAN: slab-use-after-free in tasklet_action_common+0x2ec/0x3b0 kernel/softirq.c:988
+Read of size 8 at addr ff110001654b0158 by task kworker/2:2/1259
+
+CPU: 2 UID: 0 PID: 1259 Comm: kworker/2:2 Tainted: G             L      7.4.0-rc2-kernsight-kasan #1 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+Workqueue: events request_firmware_work_func
+Call Trace:
+ <IRQ>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x116/0x1b0 lib/dump_stack.c:120
+ print_address_description mm/kasan/report.c:378 [inline]
+ print_report+0xf1/0x5c0 mm/kasan/report.c:482
+ kasan_report+0x96/0xd0 mm/kasan/report.c:595
+ tasklet_action_common+0x2ec/0x3b0 kernel/softirq.c:988
+ handle_softirqs+0x213/0x950 kernel/softirq.c:669
+ __do_softirq kernel/softirq.c:703 [inline]
+ invoke_softirq kernel/softirq.c:542 [inline]
+ __irq_exit_rcu+0x184/0x240 kernel/softirq.c:786
+ irq_exit_rcu+0xe/0x30 kernel/softirq.c:809
+ instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1062 [inline]
+ sysvec_apic_timer_interrupt+0xa8/0xc0 arch/x86/kernel/apic/apic.c:1062
+ </IRQ>
+ <TASK>
+ asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:674
+RIP: 0010:__raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:211 [inline]
+RIP: 0010:_raw_spin_unlock_irqrestore+0x41/0x80 kernel/locking/spinlock.c:221
+Code: 74 24 10 e8 71 2e b5 f5 48 89 ef e8 c9 89 b5 f5 81 e3 00 02 00 00 75 2b 9c 58 f6 c4 02 75 37 48 85 db 74 01 fb bf 01 00 00 00 <e8> ea 9f a4 f5 65 48 8b 05 3a fc 33 0a 48 85 c0 74 0e 5b 5d c3 cc
+RSP: 0018:ffa0000006fdf798 EFLAGS: 00000206
+RAX: 0000000000000006 RBX: 0000000000000200 RCX: 0000000000000040
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000001
+RBP: ffffffff9d50f4d8 R08: 0000000000000001 R09: 0000000000000001
+R10: ffffffff92b209e7 R11: 0000000000000000 R12: ff1100010a449000
+R13: dead000000000122 R14: 000000000000000b R15: dffffc0000000000
+ __debug_check_no_obj_freed lib/debugobjects.c:1180 [inline]
+ debug_check_no_obj_freed+0x293/0x520 lib/debugobjects.c:1201
+ __free_pages_prepare mm/page_alloc.c:1410 [inline]
+ free_pages_prepare+0x3db/0xe70 mm/page_alloc.c:1448
+ __free_contig_range_common+0x16a/0x250 mm/page_alloc.c:7082
+ __free_contig_range mm/page_alloc.c:7127 [inline]
+ free_pages_bulk+0xc1/0x1a0 mm/page_alloc.c:5350
+ vm_area_free_pages+0x165/0x280 mm/vmalloc.c:3498
+ vfree+0x11f/0x870 mm/vmalloc.c:3547
+ __free_fw_priv drivers/base/firmware_loader/main.c:219 [inline]
+ kref_put include/linux/kref.h:65 [inline]
+ free_fw_priv+0x3e1/0x4e0 drivers/base/firmware_loader/main.c:229
+ firmware_free_data drivers/base/firmware_loader/main.c:604 [inline]
+ release_firmware drivers/base/firmware_loader/main.c:1126 [inline]
+ release_firmware+0xa5/0xd0 drivers/base/firmware_loader/main.c:1122
+ ath9k_hif_usb_firmware_cb+0x333/0x620 drivers/net/wireless/ath/ath9k/hif_usb.c:1276
+ request_firmware_work_func+0x13b/0x440 drivers/base/firmware_loader/main.c:1164
+ process_one_work+0xa9c/0x1dc0 kernel/workqueue.c:3495
+ process_scheduled_works kernel/workqueue.c:3578 [inline]
+ worker_thread+0x698/0xeb0 kernel/workqueue.c:3659
+ kthread+0x395/0x4a0 kernel/kthread.c:436
+ ret_from_fork+0xb11/0xdb0 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+
+Allocated by task 1259:
+ kasan_save_stack+0x24/0x50 mm/kasan/common.c:57
+ kasan_save_track+0x14/0x30 mm/kasan/common.c:78
+ poison_kmalloc_redzone mm/kasan/common.c:409 [inline]
+ __kasan_kmalloc+0x7f/0x90 mm/kasan/common.c:426
+ kasan_kmalloc include/linux/kasan.h:263 [inline]
+ __kmalloc_cache_noprof+0x2b9/0x6c0 mm/slub.c:5680
+ _kmalloc_noprof include/linux/slab.h:991 [inline]
+ _kzalloc_noprof include/linux/slab.h:1312 [inline]
+ ath9k_init_wmi+0x49/0x320 drivers/net/wireless/ath/ath9k/wmi.c:95
+ ath9k_htc_probe_device+0x203/0x2650 drivers/net/wireless/ath/ath9k/htc_drv_init.c:956
+ ath9k_htc_hw_init+0x3a/0x80 drivers/net/wireless/ath/ath9k/htc_hst.c:532
+ ath9k_hif_usb_firmware_cb+0x25e/0x620 drivers/net/wireless/ath/ath9k/hif_usb.c:1255
+ request_firmware_work_func+0x13b/0x440 drivers/base/firmware_loader/main.c:1164
+ process_one_work+0xa9c/0x1dc0 kernel/workqueue.c:3495
+ process_scheduled_works kernel/workqueue.c:3578 [inline]
+ worker_thread+0x698/0xeb0 kernel/workqueue.c:3659
+ kthread+0x395/0x4a0 kernel/kthread.c:436
+ ret_from_fork+0xb11/0xdb0 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+Freed by task 1259:
+ kasan_save_stack+0x24/0x50 mm/kasan/common.c:57
+ kasan_save_track+0x14/0x30 mm/kasan/common.c:78
+ kasan_save_free_info+0x3b/0x60 mm/kasan/generic.c:584
+ poison_slab_object mm/kasan/common.c:264 [inline]
+ __kasan_slab_free+0x43/0x70 mm/kasan/common.c:296
+ kasan_slab_free include/linux/kasan.h:235 [inline]
+ slab_free_hook mm/slub.c:2780 [inline]
+ slab_free mm/slub.c:6630 [inline]
+ kfree+0x27b/0x660 mm/slub.c:6923
+ ath9k_htc_probe_device+0x292/0x2650 drivers/net/wireless/ath/ath9k/htc_drv_init.c:978
+ ath9k_htc_hw_init+0x3a/0x80 drivers/net/wireless/ath/ath9k/htc_hst.c:532
+ ath9k_hif_usb_firmware_cb+0x25e/0x620 drivers/net/wireless/ath/ath9k/hif_usb.c:1255
+ request_firmware_work_func+0x13b/0x440 drivers/base/firmware_loader/main.c:1164
+ process_one_work+0xa9c/0x1dc0 kernel/workqueue.c:3495
+ process_scheduled_works kernel/workqueue.c:3578 [inline]
+ worker_thread+0x698/0xeb0 kernel/workqueue.c:3659
+ kthread+0x395/0x4a0 kernel/kthread.c:436
+ ret_from_fork+0xb11/0xdb0 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+The buggy address belongs to the object at ff110001654b0000
+ which belongs to the cache kmalloc-2k of size 2048
+The buggy address is located 344 bytes inside of
+ freed 2048-byte region [ff110001654b0000, ff110001654b0800)
+
+The buggy address belongs to the physical page:
+page: refcount:0 mapcount:0 mapping:0000000000000000 index:0xff110001654b4000 pfn:0x1654b0
+head: order:3 mapcount:0 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+flags: 0x57ff00000000240(workingset|head|node=1|zone=2|lastcpupid=0x7ff)
+page_type: f5(slab)
+raw: 057ff00000000240 ff1100001d838f00 ffd40000043e1010 ffd4000004352810
+raw: ff110001654b4000 0000000000080002 00000000f5000000 0000000000000000
+head: 057ff00000000240 ff1100001d838f00 ffd40000043e1010 ffd4000004352810
+head: ff110001654b4000 0000000000080002 00000000f5000000 0000000000000000
+head: 057ff00000000003 fffffffffffffe01 00000000ffffffff 00000000ffffffff
+head: ffffffffffffffff 0000000000000000 00000000ffffffff 0000000000000008
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 3, migratetype Unmovable, gfp_mask 0xd28c0(GFP_NOWAIT|__GFP_IO|__GFP_FS|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC), pid 9438, tgid 9438 (syz-executor), ts 139395405341
+ set_page_owner include/linux/page_owner.h:33 [inline]
+ post_alloc_hook+0xff/0x130 mm/page_alloc.c:1859
+ prep_new_page mm/page_alloc.c:1867 [inline]
+ get_page_from_freelist+0xdae/0x2b40 mm/page_alloc.c:3940
+ __alloc_frozen_pages_noprof+0x290/0x2d20 mm/page_alloc.c:5464
+ alloc_slab_page mm/slub.c:3384 [inline]
+ allocate_slab mm/slub.c:3499 [inline]
+ new_slab+0xbe/0x6b0 mm/slub.c:3550
+ refill_objects+0x113/0x3d0 mm/slub.c:7539
+ refill_sheaf mm/slub.c:2917 [inline]
+ __pcs_replace_empty_main+0x35f/0x680 mm/slub.c:4811
+ alloc_from_pcs mm/slub.c:4887 [inline]
+ slab_alloc_node mm/slub.c:5021 [inline]
+ __do_kmalloc_node mm/slub.c:5530 [inline]
+ __kmalloc_node_track_caller_noprof+0x572/0x7f0 mm/slub.c:5662
+ kmalloc_reserve+0xeb/0x350 net/core/skbuff.c:638
+ pskb_expand_head+0x223/0x1140 net/core/skbuff.c:2318
+ netlink_trim+0x235/0x2f0 net/netlink/af_netlink.c:1316
+ netlink_broadcast_filtered+0x72/0xf00 net/netlink/af_netlink.c:1538
+ nlmsg_multicast_filtered include/net/netlink.h:1165 [inline]
+ nlmsg_multicast include/net/netlink.h:1184 [inline]
+ nlmsg_notify+0x9d/0x290 net/netlink/af_netlink.c:2627
+ rtnl_notify net/core/rtnetlink.c:1004 [inline]
+ rtmsg_ifinfo_send net/core/rtnetlink.c:4646 [inline]
+ rtmsg_ifinfo_event net/core/rtnetlink.c:4662 [inline]
+ rtmsg_ifinfo_event net/core/rtnetlink.c:4649 [inline]
+ rtnetlink_event+0x17c/0x200 net/core/rtnetlink.c:7229
+ notifier_call_chain+0xc6/0x430 kernel/notifier.c:86
+ call_netdevice_notifiers_info+0xc3/0x110 net/core/dev.c:2313
+ call_netdevice_notifiers_extack net/core/dev.c:2351 [inline]
+ call_netdevice_notifiers net/core/dev.c:2365 [inline]
+ netif_set_mac_address+0x36e/0x4a0 net/core/dev.c:10254
+page last free pid 1 tgid 1 ts 64772563994 stack trace:
+ reset_page_owner include/linux/page_owner.h:26 [inline]
+ __free_pages_prepare mm/page_alloc.c:1403 [inline]
+ free_pages_prepare+0x58f/0xe70 mm/page_alloc.c:1448
+ __free_contig_range_common+0x16a/0x250 mm/page_alloc.c:7082
+ debug_vm_pgtable_free_huge_page mm/debug_vm_pgtable.c:980 [inline]
+ destroy_args+0xafc/0x1480 mm/debug_vm_pgtable.c:993
+ debug_vm_pgtable+0x1c09/0x3370 mm/debug_vm_pgtable.c:1368
+ do_one_initcall+0x10c/0x6d0 init/main.c:1419
+ do_initcall_level init/main.c:1481 [inline]
+ do_initcalls init/main.c:1497 [inline]
+ do_basic_setup init/main.c:1517 [inline]
+ kernel_init_freeable+0x5b9/0x8e0 init/main.c:1732
+ kernel_init+0x28/0x2e0 init/main.c:1622
+ ret_from_fork+0xb11/0xdb0 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+Memory state around the buggy address:
+ ff110001654b0000: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ff110001654b0080: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ff110001654b0100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                    ^
+ ff110001654b0180: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ff110001654b0200: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+----------------
+Code disassembly (best guess):
+   0:	74 24                	je     0x26
+   2:	10 e8                	adc    %ch,%al
+   4:	71 2e                	jno    0x34
+   6:	b5 f5                	mov    $0xf5,%ch
+   8:	48 89 ef             	mov    %rbp,%rdi
+   b:	e8 c9 89 b5 f5       	call   0xf5b589d9
+  10:	81 e3 00 02 00 00    	and    $0x200,%ebx
+  16:	75 2b                	jne    0x43
+  18:	9c                   	pushf
+  19:	58                   	pop    %rax
+  1a:	f6 c4 02             	test   $0x2,%ah
+  1d:	75 37                	jne    0x56
+  1f:	48 85 db             	test   %rbx,%rbx
+  22:	74 01                	je     0x25
+  24:	fb                   	sti
+  25:	bf 01 00 00 00       	mov    $0x1,%edi
+* 2a:	e8 ea 9f a4 f5       	call   0xf5a4a019 <-- trapping instruction
+  2f:	65 48 8b 05 3a fc 33 	mov    %gs:0xa33fc3a(%rip),%rax        # 0xa33fc71
+  36:	0a
+  37:	48 85 c0             	test   %rax,%rax
+  3a:	74 0e                	je     0x4a
+  3c:	5b                   	pop    %rbx
+  3d:	5d                   	pop    %rbp
+  3e:	c3                   	ret
+  3f:	cc                   	int3
+
+<<<<<<<<<<<<<<< tail report >>>>>>>>>>>>>>>
+
+>ff110001654b0100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                    ^
+ ff110001654b0180: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ff110001654b0200: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+Kernel panic - not syncing: KASAN: panic_on_warn set ...
+CPU: 2 UID: 0 PID: 1259 Comm: kworker/2:2 Tainted: G             L      7.4.0-rc2-kernsight-kasan #1 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+Workqueue: events request_firmware_work_func
+Call Trace:
+ <IRQ>
+ dump_stack_lvl+0x3d/0x1b0
+ vpanic+0x726/0x7f0
+ panic+0xc7/0xd0
+ check_panic_on_warn+0xb6/0xc0
+ end_report+0x12c/0x180
+ kasan_report+0xa4/0xd0
+ tasklet_action_common+0x2ec/0x3b0
+ handle_softirqs+0x213/0x950
+ __irq_exit_rcu+0x184/0x240
+ irq_exit_rcu+0xe/0x30
+ sysvec_apic_timer_interrupt+0xa8/0xc0
+ </IRQ>
+ <TASK>
+ asm_sysvec_apic_timer_interrupt+0x1a/0x20
+RIP: 0010:_raw_spin_unlock_irqrestore+0x41/0x80
+Code: 74 24 10 e8 71 2e b5 f5 48 89 ef e8 c9 89 b5 f5 81 e3 00 02 00 00 75 2b 9c 58 f6 c4 02 75 37 48 85 db 74 01 fb bf 01 00 00 00 <e8> ea 9f a4 f5 65 48 8b 05 3a fc 33 0a 48 85 c0 74 0e 5b 5d c3 cc
+RSP: 0018:ffa0000006fdf798 EFLAGS: 00000206
+RAX: 0000000000000006 RBX: 0000000000000200 RCX: 0000000000000040
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000001
+RBP: ffffffff9d50f4d8 R08: 0000000000000001 R09: 0000000000000001
+R10: ffffffff92b209e7 R11: 0000000000000000 R12: ff1100010a449000
+R13: dead000000000122 R14: 000000000000000b R15: dffffc0000000000
+ debug_check_no_obj_freed+0x293/0x520
+ free_pages_prepare+0x3db/0xe70
+ __free_contig_range_common+0x16a/0x250
+ free_pages_bulk+0xc1/0x1a0
+ vm_area_free_pages+0x165/0x280
+ vfree+0x11f/0x870
+ free_fw_priv+0x3e1/0x4e0
+ release_firmware+0xa5/0xd0
+ ath9k_hif_usb_firmware_cb+0x333/0x620
+ request_firmware_work_func+0x13b/0x440
+ process_one_work+0xa9c/0x1dc0
+ worker_thread+0x698/0xeb0
+ kthread+0x395/0x4a0
+ ret_from_fork+0xb11/0xdb0
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
+Kernel Offset: disabled
+Rebooting in 86400 seconds..
+
+<<<<<<<<<<<<<<< tail report >>>>>>>>>>>>>>>
+

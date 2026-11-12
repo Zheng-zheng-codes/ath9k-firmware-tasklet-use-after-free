@@ -47,8 +47,12 @@ programs, so the reproducer is an ordered program set (50 programs):
 syz-execprog -procs=8 -threaded -repeat=0 -executor ./syz-executor repro.kernsight.prog
 ```
 
-Verified by the fuzzing pipeline's reproducer machinery on a fresh VM
-(reproducer pipeline outcome: confirmed=true, status=verified). A C
+Verified twice: (1) by the fuzzing pipeline's reproducer machinery on a
+fresh VM (reproducer pipeline outcome: confirmed=true, status=verified);
+(2) by an external standalone chunked-replay run on a fresh VM — the
+KASAN use-after-free report fired 216.5 seconds after guest boot and
+panic_on_warn escalated it to a kernel panic (full console:
+`logs/external-verification/external-verification-serial.log`). A C
 reproducer has not been included yet; it will be added once syzkaller's
 C-repro stage passes for this bug.
 

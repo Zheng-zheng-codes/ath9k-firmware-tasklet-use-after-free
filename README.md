@@ -36,13 +36,18 @@ error path: after `ath9k_init_wmi()` registers the WMI event tasklet, a
 USB message schedules it, then the init failure path frees the WMI
 structure before the tasklet fires.
 
-The crash depends on device/firmware state built up by the preceding
-programs, so the reproducer is an ordered program set (50 programs):
+The crash depends on device state built up by preceding operations. The
+reproducer consists of 50 priming programs and one triggering program
+(51 programs in total):
 
 ```sh
 # in the guest, as root:
 syz-execprog -procs=8 -threaded -repeat=0 -executor ./syz-executor repro.kernsight.prog
 ```
+
+The programs are replayed repeatedly with 8 parallel workers
+(`-repeat=0`); the execution order is not guaranteed to be strictly
+serial.
 
 Verified twice: (1) by the fuzzing pipeline's reproducer machinery on a
 fresh VM (reproducer pipeline outcome: confirmed=true, status=verified);
@@ -57,7 +62,7 @@ C-repro stage passes for this bug.
 
 - `kernel.config` — kernel configuration used (also required to interpret addresses)
 - `environment.txt` — kernel image info (sha256), QEMU command line, syzkaller commit, reproducer command
-- `reproducer/repro.kernsight.prog` — pipeline-verified reproducer (50-program ordered set + triggering testcase)
+- `reproducer/repro.kernsight.prog` — pipeline-verified reproducer (50 priming programs + one triggering program)
 - `reproducer/repro.prog` — minimal triggering testcase (state-dependent; does not reproduce alone)
 - `reproducer/repro.priming.prog` — state-priming program set (pipeline repro recipe)
 - `logs/log-*.txt`, `logs/report-*.txt` — original syzkaller execution logs and crash reports from the fuzzing pipeline

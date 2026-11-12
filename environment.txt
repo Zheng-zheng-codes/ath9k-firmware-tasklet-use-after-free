@@ -15,7 +15,7 @@ QEMU command line:
     -display none -vga none -serial file:serial.log -no-reboot
 
 reproducer execution (in the guest, as root):
-  syz-execprog -procs=1 -threaded -repeat=0 -executor ./syz-executor repro.prog
+  syz-execprog -procs=8 -threaded -repeat=0 -executor ./syz-executor repro.prog
 
 syz-execprog / syz-executor built from syzkaller at commit
   853b104bb454141a5b0fc0e4218ec78e9f34ffb1
